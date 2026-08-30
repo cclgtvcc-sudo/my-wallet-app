@@ -11,6 +11,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="محفظتي المالية">
+
+    <!-- رابط ملف الـ Manifest لتطبيقات الـ PWA -->
+    <link rel="manifest" href="manifest.json">
     
     <!-- أيقونة تطبيق إدارة مالية (3D Finance Icon) -->
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2845/2845899.png">
@@ -78,7 +81,7 @@
             object-fit: contain;
         }
 
-        /* Drive Sync & Shortcut Bar */
+        /* Drive Sync & Banner Bar */
         .sync-bar {
             background: #ffffff;
             border-radius: 12px;
@@ -88,6 +91,18 @@
             align-items: center;
             justify-content: space-between;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .salary-banner {
+            background: linear-gradient(135deg, #10b981, #047857);
+            color: white;
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin: 15px 15px 0 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
         }
 
         /* Stat Cards Carousel / Grid */
@@ -327,15 +342,13 @@
     <div class="app-header">
         <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2">
-                <!-- صورة الإدارة المالية للتطبيق -->
                 <img src="https://cdn-icons-png.flaticon.com/512/2845/2845899.png" alt="Logo" class="app-logo-img">
                 <div>
                     <h5>محفظتي المالية</h5>
-                    <div class="subtitle">إدارة ومتابعة المصاريف بسهولة</div>
+                    <div class="subtitle" id="header-month-subtitle">إدارة ومتابعة المصاريف بسهولة</div>
                 </div>
             </div>
             <div class="d-flex gap-2">
-                <!-- زر إضافة شورتكت للتطبيق على سطح المكتب -->
                 <button id="btn-install-shortcut" class="btn btn-sm btn-warning text-dark fw-bold rounded-pill px-2 fs-7" onclick="installAppShortcut()" style="display: none;">
                     <i class="fa-solid fa-mobile-screen-button me-1"></i> تثبيت
                 </button>
@@ -344,6 +357,17 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <!-- Salary Receive Banner Bar -->
+    <div class="salary-banner">
+        <div>
+            <div class="fw-bold fs-6">استلام الراتب الشهري</div>
+            <div class="fs-7 opacity-75">أرشفة الشهر الحالي وبدء شهر جديد</div>
+        </div>
+        <button class="btn btn-light btn-sm text-success fw-bold rounded-pill px-3 shadow-sm" onclick="handleSalaryReceived()">
+            <i class="fa-solid fa-file-invoice-dollar me-1"></i> تم استلام الراتب
+        </button>
     </div>
 
     <!-- Google Drive Sync Status Bar -->
@@ -355,6 +379,12 @@
         <button id="btn-auth-drive" class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-7" onclick="handleAuthClick()">
             <i class="fa-solid fa-sync me-1"></i> ربط الحساب
         </button>
+    </div>
+
+    <!-- Archive Mode Banner (Shows when reviewing history) -->
+    <div id="archive-banner" class="alert alert-warning mx-3 mt-3 mb-0 rounded-3 text-xs d-flex justify-between align-items-center" style="display: none;">
+        <span><i class="fa-solid fa-clock-rotate-left me-1"></i> تعرض حالياً أرشيف شهر: <b id="archive-month-label"></b></span>
+        <button class="btn btn-sm btn-warning text-dark font-semibold px-2 py-1 fs-7" onclick="returnToCurrentMonth()">العودة للشهر الحالي</button>
     </div>
 
     <!-- Horizontal Scroll Stats -->
@@ -529,7 +559,25 @@
             </div>
         </div>
 
-        <!-- TAB 4: التقرير والتقييم -->
+        <!-- TAB 4: السجل والأرشيف -->
+        <div id="tab-archive" class="app-tab-content" style="display: none;">
+            <div class="card-custom">
+                <div class="card-header-custom text-primary">
+                    <span><i class="fa-solid fa-clock-rotate-left me-2"></i> سجل الأرشيف والنسخ الاحتياطية</span>
+                    <button onclick="fetchArchiveList()" class="btn btn-sm btn-outline-primary rounded-pill fs-7">
+                        <i class="fa-solid fa-rotate-right me-1"></i> تحديث
+                    </button>
+                </div>
+                <div class="card-body">
+                    <p class="fs-7 text-muted mb-3">اختر شهرًا سابقًا لاستعادة بياناته ومراجعتها في أي وقت:</p>
+                    <div id="archive-list-mobile">
+                        <div class="text-center text-muted fs-7 py-3">قم بتسجيل الدخول إلى Google Drive لرؤية الأرشيف.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: التقرير والتقييم -->
         <div id="tab-report" class="app-tab-content" style="display: none;">
             <div class="card-custom">
                 <div class="card-header-custom text-success" style="color: var(--accent-green);">
@@ -590,6 +638,10 @@
             <i class="fa-solid fa-file-invoice-dollar"></i>
             <span>الالتزامات</span>
         </button>
+        <button class="nav-item-mobile" id="nav-archive" onclick="switchTab('archive')">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>السجل</span>
+        </button>
         <button class="nav-item-mobile" id="nav-report" onclick="switchTab('report')">
             <i class="fa-solid fa-chart-pie"></i>
             <span>التقرير</span>
@@ -597,6 +649,17 @@
     </div>
 
 <script>
+    // ==========================================
+    // Register Service Worker for PWA
+    // ==========================================
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker Registered Successfully:', reg))
+                .catch(err => console.log('Service Worker Registration Failed:', err));
+        });
+    }
+
     // ==========================================
     // Desktop / Home Screen Shortcut Logic
     // ==========================================
@@ -623,6 +686,65 @@
     }
 
     // ==========================================
+    // App State Management
+    // ==========================================
+    let currentMonth = new Date().toISOString().slice(0, 7);
+    let isViewingArchive = false;
+
+    let banks = [];
+    let creditCards = [];
+    let fixedExpenses = [];
+    let debts = [];
+    let dailyExpenses = [];
+
+    function loadMonthData() {
+        banks = JSON.parse(localStorage.getItem(`my_banks_${currentMonth}`)) || JSON.parse(localStorage.getItem('my_banks')) || [];
+        creditCards = JSON.parse(localStorage.getItem(`my_credits_${currentMonth}`)) || JSON.parse(localStorage.getItem('my_credits')) || [];
+        fixedExpenses = JSON.parse(localStorage.getItem(`my_fixed_${currentMonth}`)) || JSON.parse(localStorage.getItem('my_fixed')) || [];
+        debts = JSON.parse(localStorage.getItem(`my_debts_${currentMonth}`)) || JSON.parse(localStorage.getItem('my_debts')) || [];
+        dailyExpenses = JSON.parse(localStorage.getItem(`my_daily_${currentMonth}`)) || JSON.parse(localStorage.getItem('my_daily')) || [];
+    }
+
+    function saveDataToLocalStorage() {
+        if (!isViewingArchive) {
+            localStorage.setItem(`my_banks_${currentMonth}`, JSON.stringify(banks));
+            localStorage.setItem(`my_credits_${currentMonth}`, JSON.stringify(creditCards));
+            localStorage.setItem(`my_fixed_${currentMonth}`, JSON.stringify(fixedExpenses));
+            localStorage.setItem(`my_debts_${currentMonth}`, JSON.stringify(debts));
+            localStorage.setItem(`my_daily_${currentMonth}`, JSON.stringify(dailyExpenses));
+
+            // Legacy Fallback
+            localStorage.setItem('my_banks', JSON.stringify(banks));
+            localStorage.setItem('my_credits', JSON.stringify(creditCards));
+            localStorage.setItem('my_fixed', JSON.stringify(fixedExpenses));
+            localStorage.setItem('my_debts', JSON.stringify(debts));
+            localStorage.setItem('my_daily', JSON.stringify(dailyExpenses));
+        }
+    }
+
+    // ==========================================
+    // Salary Receive & Reset Logic
+    // ==========================================
+    async function handleSalaryReceived() {
+        let confirmAction = confirm(
+            "هل تأكدت من استلام الراتب؟\n\n" +
+            "سيتم أرشفة بيانات الشهر الحالي تلقائيًا على Google Drive ومسح المصروفات لبدء شهر جديد."
+        );
+        if (!confirmAction) return;
+
+        if (accessToken) {
+            await saveToDrive(true);
+        }
+
+        dailyExpenses = [];
+        saveData();
+
+        currentMonth = new Date().toISOString().slice(0, 7);
+        renderAll();
+        alert("تم أرشفة الشهر بنجاح وتصفيـر المدخلات لبدء الشهر الجديد!");
+    }
+
+    // ==========================================
     // Google Drive Integration Logic
     // ==========================================
     const CLIENT_ID = '445212716607-1fp1d5t44lgm8uvu1hrc9o1t228dcqm2.apps.googleusercontent.com'; 
@@ -630,7 +752,6 @@
     
     let tokenClient;
     let accessToken = null;
-    let driveFileId = null;
 
     function initGoogleAuth() {
         if (typeof google === 'undefined') return;
@@ -640,9 +761,9 @@
             callback: async (tokenResponse) => {
                 if (tokenResponse.access_token) {
                     accessToken = tokenResponse.access_token;
-                    document.getElementById('sync-status-text').innerText = 'جاري المزامنة مع Google Drive...';
-                    document.getElementById('sync-status-text').className = 'fs-7 fw-bold text-primary';
-                    await loadFromDrive();
+                    document.getElementById('sync-status-text').innerText = 'متصل بـ Google Drive';
+                    document.getElementById('sync-status-text').className = 'fs-7 fw-bold text-success';
+                    fetchArchiveList();
                 }
             },
         });
@@ -650,6 +771,9 @@
 
     window.onload = () => {
         initGoogleAuth();
+        document.getElementById('daily-date').valueAsDate = new Date();
+        loadMonthData();
+        renderAll();
     };
 
     function handleAuthClick() {
@@ -661,44 +785,10 @@
         }
     }
 
-    async function loadFromDrive() {
-        if (!accessToken) return;
-        try {
-            let response = await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name="my_wallet_data.json"', {
-                headers: { 'Authorization': 'Bearer ' + accessToken }
-            });
-            let data = await response.json();
-
-            if (data.files && data.files.length > 0) {
-                driveFileId = data.files[0].id;
-                let fileResp = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`, {
-                    headers: { 'Authorization': 'Bearer ' + accessToken }
-                });
-                let fileData = await fileResp.json();
-                
-                banks = fileData.banks || [];
-                creditCards = fileData.creditCards || [];
-                fixedExpenses = fileData.fixedExpenses || [];
-                debts = fileData.debts || [];
-                dailyExpenses = fileData.dailyExpenses || [];
-                
-                saveDataToLocalStorage();
-                renderAll();
-                document.getElementById('sync-status-text').innerText = 'تمت المزامنة بنجاح مع Drive';
-                document.getElementById('sync-status-text').className = 'fs-7 fw-bold text-success';
-            } else {
-                await saveToDrive();
-            }
-        } catch (err) {
-            console.error(err);
-            document.getElementById('sync-status-text').innerText = 'فشلت المزامنة!';
-            document.getElementById('sync-status-text').className = 'fs-7 fw-bold text-danger';
-        }
-    }
-
-    async function saveToDrive() {
+    async function saveToDrive(isBackup = false) {
         if (!accessToken) return;
 
+        const fileName = `backup_${currentMonth}.json`;
         const payload = {
             banks,
             creditCards,
@@ -709,53 +799,113 @@
         };
 
         const fileContent = JSON.stringify(payload);
-        const file = new Blob([fileContent], { type: 'application/json' });
 
         try {
-            if (driveFileId) {
-                await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': 'Bearer ' + accessToken,
-                        'Content-Type': 'application/json'
-                    },
-                    body: fileContent
-                });
-            } else {
-                const metadata = {
-                    name: 'my_wallet_data.json',
-                    parents: ['appDataFolder']
-                };
-                const formData = new FormData();
-                formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-                formData.append('file', file);
+            let searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${fileName}'`, {
+                headers: { 'Authorization': 'Bearer ' + accessToken }
+            });
+            let searchData = await searchRes.json();
 
-                let res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + accessToken },
-                    body: formData
-                });
-                let resData = await res.json();
-                driveFileId = resData.id;
-            }
-            document.getElementById('sync-status-text').innerText = 'تم الحفظ في Google Drive';
+            let fileId = (searchData.files && searchData.files.length > 0) ? searchData.files[0].id : null;
+
+            const metadata = { name: fileName, parents: ['appDataFolder'] };
+            const formData = new FormData();
+            formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            formData.append('file', new Blob([fileContent], { type: 'application/json' }));
+
+            let endpoint = fileId 
+                ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`
+                : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+
+            await fetch(endpoint, {
+                method: fileId ? 'PATCH' : 'POST',
+                headers: { 'Authorization': 'Bearer ' + accessToken },
+                body: formData
+            });
+
+            document.getElementById('sync-status-text').innerText = 'تم الحفظ في Drive';
             document.getElementById('sync-status-text').className = 'fs-7 fw-bold text-success';
+            fetchArchiveList();
         } catch (err) {
             console.error('Save to drive error:', err);
         }
     }
 
-    // ==========================================
-    // Local State Management
-    // ==========================================
-    let banks = JSON.parse(localStorage.getItem('my_banks')) || [];
-    let creditCards = JSON.parse(localStorage.getItem('my_credits')) || [];
-    let fixedExpenses = JSON.parse(localStorage.getItem('my_fixed')) || [];
-    let debts = JSON.parse(localStorage.getItem('my_debts')) || [];
-    let dailyExpenses = JSON.parse(localStorage.getItem('my_daily')) || [];
+    async function fetchArchiveList() {
+        if (!accessToken) return;
 
-    document.getElementById('daily-date').valueAsDate = new Date();
+        let archiveContainer = document.getElementById('archive-list-mobile');
+        archiveContainer.innerHTML = '<div class="text-center text-muted fs-7 py-3">جاري تحميل النسخ...</div>';
 
+        try {
+            let res = await fetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name contains 'backup_'`, {
+                headers: { 'Authorization': 'Bearer ' + accessToken }
+            });
+            let data = await res.json();
+
+            if (!data.files || data.files.length === 0) {
+                archiveContainer.innerHTML = '<div class="text-center text-muted fs-7 py-3">لا توجد نسخ محفوضة في Drive</div>';
+                return;
+            }
+
+            archiveContainer.innerHTML = data.files.map(f => {
+                let monthLabel = f.name.replace('backup_', '').replace('.json', '');
+                return `
+                    <div class="data-card-item" style="border-right-color: #2563eb;">
+                        <div>
+                            <div class="item-title">شهر: ${monthLabel}</div>
+                            <div class="item-sub">نسخة محفوظة</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-7" onclick="restoreArchive('${f.id}', '${monthLabel}')">
+                            <i class="fa-solid fa-download me-1"></i> استعراض
+                        </button>
+                    </div>`;
+            }).join('');
+        } catch (err) {
+            console.error(err);
+            archiveContainer.innerHTML = '<div class="text-center text-danger fs-7 py-3">تعذر جلب الأرشيف!</div>';
+        }
+    }
+
+    async function restoreArchive(fileId, monthLabel) {
+        if (!accessToken) return;
+        try {
+            let res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+                headers: { 'Authorization': 'Bearer ' + accessToken }
+            });
+            let data = await res.json();
+
+            banks = data.banks || [];
+            creditCards = data.creditCards || [];
+            fixedExpenses = data.fixedExpenses || [];
+            debts = data.debts || [];
+            dailyExpenses = data.dailyExpenses || [];
+
+            isViewingArchive = true;
+            currentMonth = monthLabel;
+
+            document.getElementById('archive-month-label').innerText = monthLabel;
+            document.getElementById('archive-banner').style.display = 'flex';
+
+            renderAll();
+            switchTab('daily');
+        } catch (err) {
+            console.error(err);
+            alert('تعذر تحميل بيانات الملف المحدد.');
+        }
+    }
+
+    function returnToCurrentMonth() {
+        isViewingArchive = false;
+        currentMonth = new Date().toISOString().slice(0, 7);
+        document.getElementById('archive-banner').style.display = 'none';
+        loadMonthData();
+        renderAll();
+    }
+
+    // ==========================================
+    // Core Handlers & UI Updates
+    // ==========================================
     function switchTab(tabName) {
         document.querySelectorAll('.app-tab-content').forEach(el => el.style.display = 'none');
         document.querySelectorAll('.nav-item-mobile').forEach(el => el.classList.remove('active'));
@@ -766,14 +916,6 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function saveDataToLocalStorage() {
-        localStorage.setItem('my_banks', JSON.stringify(banks));
-        localStorage.setItem('my_credits', JSON.stringify(creditCards));
-        localStorage.setItem('my_fixed', JSON.stringify(fixedExpenses));
-        localStorage.setItem('my_debts', JSON.stringify(debts));
-        localStorage.setItem('my_daily', JSON.stringify(dailyExpenses));
-    }
-
     function saveData() {
         saveDataToLocalStorage();
         renderAll();
@@ -782,13 +924,10 @@
         }
     }
 
-    window.addEventListener('beforeunload', () => {
-        saveDataToLocalStorage();
-    });
-
     // Handlers
     document.getElementById('bank-form').onsubmit = (e) => {
         e.preventDefault();
+        if (isViewingArchive) return alert('أنت تعرض الأرشيف فقط.');
         banks.push({
             name: document.getElementById('bank-name').value,
             balance: parseFloat(document.getElementById('bank-balance').value)
@@ -799,6 +938,7 @@
 
     document.getElementById('credit-card-form').onsubmit = (e) => {
         e.preventDefault();
+        if (isViewingArchive) return alert('أنت تعرض الأرشيف فقط.');
         creditCards.push({
             name: document.getElementById('credit-card-name').value,
             limit: parseFloat(document.getElementById('credit-card-limit').value),
@@ -810,6 +950,7 @@
 
     document.getElementById('fixed-form').onsubmit = (e) => {
         e.preventDefault();
+        if (isViewingArchive) return alert('أنت تعرض الأرشيف فقط.');
         let amount = parseFloat(document.getElementById('fixed-amount').value);
         let source = document.getElementById('fixed-source').value;
 
@@ -826,6 +967,7 @@
 
     document.getElementById('debt-form').onsubmit = (e) => {
         e.preventDefault();
+        if (isViewingArchive) return alert('أنت تعرض الأرشيف فقط.');
         debts.push({
             person: document.getElementById('debt-person').value,
             type: document.getElementById('debt-type').value,
@@ -837,6 +979,7 @@
 
     document.getElementById('daily-form').onsubmit = (e) => {
         e.preventDefault();
+        if (isViewingArchive) return alert('أنت تعرض الأرشيف فقط.');
         let amount = parseFloat(document.getElementById('daily-amount').value);
         let source = document.getElementById('daily-source').value;
 
@@ -869,6 +1012,7 @@
     }
 
     function deleteItem(type, index) {
+        if (isViewingArchive) return alert('لا يمكن الحذف أثناء تصفح الأرشيف.');
         if(type === 'bank') banks.splice(index, 1);
         if(type === 'credit') creditCards.splice(index, 1);
         if(type === 'fixed') {
@@ -934,6 +1078,10 @@
     function renderAll() {
         updateSelectOptions();
 
+        document.getElementById('header-month-subtitle').innerText = isViewingArchive
+            ? `أرشيف شهر: ${currentMonth}`
+            : `إدارة ومتابعة المصاريف (${currentMonth})`;
+
         let bankHtml = '';
         let totalBank = 0;
         banks.forEach((b, i) => {
@@ -946,7 +1094,7 @@
                     </div>
                     <div class="d-flex align-items-center">
                         <div class="item-amount text-primary me-2">${b.balance.toFixed(2)} ر.س</div>
-                        <button class="btn-delete" onclick="deleteItem('bank', ${i})"><i class="fa-solid fa-trash-can"></i></button>
+                        ${!isViewingArchive ? `<button class="btn-delete" onclick="deleteItem('bank', ${i})"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                     </div>
                 </div>`;
         });
@@ -965,7 +1113,7 @@
                     </div>
                     <div class="d-flex align-items-center">
                         <div class="item-amount text-purple me-2" style="color: #7c3aed;">${c.used.toFixed(2)} ر.س</div>
-                        <button class="btn-delete" onclick="deleteItem('credit', ${i})"><i class="fa-solid fa-trash-can"></i></button>
+                        ${!isViewingArchive ? `<button class="btn-delete" onclick="deleteItem('credit', ${i})"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                     </div>
                 </div>`;
         });
@@ -983,7 +1131,7 @@
                     </div>
                     <div class="d-flex align-items-center">
                         <div class="item-amount text-warning me-2" style="color: #d97706;">${f.amount.toFixed(2)} ر.س</div>
-                        <button class="btn-delete" onclick="deleteItem('fixed', ${i})"><i class="fa-solid fa-trash-can"></i></button>
+                        ${!isViewingArchive ? `<button class="btn-delete" onclick="deleteItem('fixed', ${i})"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                     </div>
                 </div>`;
         });
@@ -1004,7 +1152,7 @@
                     </div>
                     <div class="d-flex align-items-center">
                         <div class="item-amount me-2" style="color: ${color};">${d.amount.toFixed(2)} ر.س</div>
-                        <button class="btn-delete" onclick="deleteItem('debt', ${i})"><i class="fa-solid fa-trash-can"></i></button>
+                        ${!isViewingArchive ? `<button class="btn-delete" onclick="deleteItem('debt', ${i})"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                     </div>
                 </div>`;
         });
@@ -1022,7 +1170,7 @@
                     </div>
                     <div class="d-flex align-items-center">
                         <div class="item-amount text-danger me-2">${dl.amount.toFixed(2)} ر.س</div>
-                        <button class="btn-delete" onclick="deleteItem('daily', ${i})"><i class="fa-solid fa-trash-can"></i></button>
+                        ${!isViewingArchive ? `<button class="btn-delete" onclick="deleteItem('daily', ${i})"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                     </div>
                 </div>`;
         });
@@ -1091,8 +1239,6 @@
             text.innerText = `أداء ممتاز! استهلاكك منخفض (${ratio.toFixed(1)}%). واصل التخطيط والادخار الناجح.`;
         }
     }
-
-    renderAll();
 </script>
 </body>
 </html>
