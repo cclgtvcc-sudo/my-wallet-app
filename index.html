@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <!-- إعدادات شورتكت وسطح المكتب والأيقونة المالية -->
-    <title>إدارة المالية الشخصية</title>
+    <title>مديرك المالي</title>
     <meta name="theme-color" content="#1e293b">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="محفظتي المالية">
+    <meta name="apple-mobile-web-app-title" content="مديرك المالي">
 
     <!-- رابط ملف الـ Manifest لتطبيقات الـ PWA -->
     <link rel="manifest" href="manifest.json">
@@ -91,6 +91,7 @@
             align-items: center;
             justify-content: space-between;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
         }
 
         .salary-banner {
@@ -344,7 +345,7 @@
             <div class="d-flex align-items-center gap-2">
                 <img src="https://cdn-icons-png.flaticon.com/512/2845/2845899.png" alt="Logo" class="app-logo-img">
                 <div>
-                    <h5>محفظتي المالية</h5>
+                    <h5>مديرك المالي</h5>
                     <div class="subtitle" id="header-month-subtitle">إدارة ومتابعة المصاريف بسهولة</div>
                 </div>
             </div>
@@ -371,9 +372,9 @@
     </div>
 
     <!-- Google Drive Sync Status Bar -->
-    <div class="sync-bar">
+    <div class="sync-bar" id="sync-bar-container">
         <div class="d-flex align-items-center gap-2">
-            <i class="fa-brands fa-google-drive text-success fs-5"></i>
+            <i id="sync-icon" class="fa-brands fa-google-drive text-secondary fs-5"></i>
             <span id="sync-status-text" class="fs-7 fw-bold text-muted">غير مرتبط بـ Google Drive</span>
         </div>
         <button id="btn-auth-drive" class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-7" onclick="handleAuthClick()">
@@ -649,9 +650,6 @@
     </div>
 
 <script>
-    // ==========================================
-    // Register Service Worker for PWA
-    // ==========================================
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
@@ -660,9 +658,6 @@
         });
     }
 
-    // ==========================================
-    // Desktop / Home Screen Shortcut Logic
-    // ==========================================
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
@@ -685,9 +680,6 @@
         }
     }
 
-    // ==========================================
-    // App State Management
-    // ==========================================
     let currentMonth = new Date().toISOString().slice(0, 7);
     let isViewingArchive = false;
 
@@ -713,7 +705,6 @@
             localStorage.setItem(`my_debts_${currentMonth}`, JSON.stringify(debts));
             localStorage.setItem(`my_daily_${currentMonth}`, JSON.stringify(dailyExpenses));
 
-            // Legacy Fallback
             localStorage.setItem('my_banks', JSON.stringify(banks));
             localStorage.setItem('my_credits', JSON.stringify(creditCards));
             localStorage.setItem('my_fixed', JSON.stringify(fixedExpenses));
@@ -722,9 +713,6 @@
         }
     }
 
-    // ==========================================
-    // Salary Receive & Reset Logic
-    // ==========================================
     async function handleSalaryReceived() {
         let confirmAction = confirm(
             "هل تأكدت من استلام الراتب؟\n\n" +
@@ -745,13 +733,38 @@
     }
 
     // ==========================================
-    // Google Drive Integration Logic
+    // Google Drive Integration Logic (Fixed Sync UI)
     // ==========================================
     const CLIENT_ID = '445212716607-1fp1d5t44lgm8uvu1hrc9o1t228dcqm2.apps.googleusercontent.com'; 
     const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
     
     let tokenClient;
     let accessToken = null;
+
+    // دالة تحديث واجهة المزامنة فور نجاح الربط
+    function updateDriveSyncUI(isConnected, statusText = '') {
+        const syncStatusText = document.getElementById('sync-status-text');
+        const btnAuthDrive = document.getElementById('btn-auth-drive');
+        const syncIcon = document.getElementById('sync-icon');
+
+        if (isConnected) {
+            syncStatusText.innerText = statusText || 'متصل ومربوط بـ Google Drive';
+            syncStatusText.className = 'fs-7 fw-bold text-success';
+            syncIcon.className = 'fa-brands fa-google-drive text-success fs-5';
+            
+            btnAuthDrive.innerHTML = '<i class="fa-solid fa-check me-1"></i> متصل';
+            btnAuthDrive.className = 'btn btn-sm btn-success rounded-pill px-3 fs-7 disabled';
+            btnAuthDrive.removeAttribute('onclick');
+        } else {
+            syncStatusText.innerText = statusText || 'غير مرتبط بـ Google Drive';
+            syncStatusText.className = 'fs-7 fw-bold text-muted';
+            syncIcon.className = 'fa-brands fa-google-drive text-secondary fs-5';
+            
+            btnAuthDrive.innerHTML = '<i class="fa-solid fa-sync me-1"></i> ربط الحساب';
+            btnAuthDrive.className = 'btn btn-sm btn-outline-primary rounded-pill px-3 fs-7';
+            btnAuthDrive.setAttribute('onclick', 'handleAuthClick()');
+        }
+    }
 
     function initGoogleAuth() {
         if (typeof google === 'undefined') return;
@@ -761,9 +774,10 @@
             callback: async (tokenResponse) => {
                 if (tokenResponse.access_token) {
                     accessToken = tokenResponse.access_token;
-                    document.getElementById('sync-status-text').innerText = 'متصل بـ Google Drive';
-                    document.getElementById('sync-status-text').className = 'fs-7 fw-bold text-success';
+                    sessionStorage.setItem('gdrive_token', accessToken);
+                    updateDriveSyncUI(true);
                     fetchArchiveList();
+                    saveToDrive(); // المزامنة الأولية بعد الربط الفوري
                 }
             },
         });
@@ -774,6 +788,14 @@
         document.getElementById('daily-date').valueAsDate = new Date();
         loadMonthData();
         renderAll();
+
+        // استعادة السيشن المفتوحة مسبقاً إن وجدت
+        const savedToken = sessionStorage.getItem('gdrive_token');
+        if (savedToken) {
+            accessToken = savedToken;
+            updateDriveSyncUI(true);
+            fetchArchiveList();
+        }
     };
 
     function handleAuthClick() {
@@ -823,8 +845,7 @@
                 body: formData
             });
 
-            document.getElementById('sync-status-text').innerText = 'تم الحفظ في Drive';
-            document.getElementById('sync-status-text').className = 'fs-7 fw-bold text-success';
+            updateDriveSyncUI(true, 'تم التزامن وتحديث البيانات في Drive');
             fetchArchiveList();
         } catch (err) {
             console.error('Save to drive error:', err);
@@ -844,7 +865,7 @@
             let data = await res.json();
 
             if (!data.files || data.files.length === 0) {
-                archiveContainer.innerHTML = '<div class="text-center text-muted fs-7 py-3">لا توجد نسخ محفوضة في Drive</div>';
+                archiveContainer.innerHTML = '<div class="text-center text-muted fs-7 py-3">لا توجد نسخ محفوظة في Drive</div>';
                 return;
             }
 
@@ -903,9 +924,6 @@
         renderAll();
     }
 
-    // ==========================================
-    // Core Handlers & UI Updates
-    // ==========================================
     function switchTab(tabName) {
         document.querySelectorAll('.app-tab-content').forEach(el => el.style.display = 'none');
         document.querySelectorAll('.nav-item-mobile').forEach(el => el.classList.remove('active'));
@@ -924,7 +942,6 @@
         }
     }
 
-    // Handlers
     document.getElementById('bank-form').onsubmit = (e) => {
         e.preventDefault();
         if (isViewingArchive) return alert('أنت تعرض الأرشيف فقط.');
