@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <title>مديرك المالي</title>
+    <title id="app-title-tag">مديرك المالي</title>
     <meta name="theme-color" content="#1e293b">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,12 +15,12 @@
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2845/2845899.png">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2845/2845899.png">
 
-    <!-- Bootstrap RTL CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS (Dynamic loading via JS or fallback) -->
+    <link id="bootstrap-css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts: Cairo -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Cairo & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
@@ -39,10 +39,26 @@
         }
 
         body {
-            font-family: 'Cairo', system-ui, -apple-system, sans-serif;
+            font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif;
             background-color: var(--bg-color);
             padding-bottom: 90px;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        /* LTR Styles Fixes */
+        [dir="ltr"] .data-card-item {
+            border-right: none !important;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        [dir="ltr"] .action-btn-group {
+            margin-right: 0;
+            margin-left: 8px;
+        }
+
+        [dir="ltr"] .stat-card-mobile i {
+            left: auto;
+            right: 10px;
         }
 
         .app-header {
@@ -221,7 +237,6 @@
         .data-card-item .item-amount {
             font-weight: 800;
             font-size: 0.95rem;
-            text-align: left;
         }
 
         .action-btn-group {
@@ -300,6 +315,11 @@
             z-index: 1040;
             border: none;
         }
+        
+        [dir="ltr"] .fab-btn {
+            left: auto;
+            right: 20px;
+        }
 
         .report-box {
             background: #f8fafc;
@@ -324,13 +344,17 @@
             <div class="d-flex align-items-center gap-2">
                 <img src="https://cdn-icons-png.flaticon.com/512/2845/2845899.png" alt="Logo" class="app-logo-img">
                 <div>
-                    <h5>مديرك المالي</h5>
+                    <h5 id="txt-app-title">مديرك المالي</h5>
                     <div class="subtitle" id="header-month-subtitle">إدارة ومتابعة المصاريف بسهولة</div>
                 </div>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 align-items-center">
+                <!-- Language Switcher Button -->
+                <button class="btn btn-sm btn-outline-light rounded-pill px-2 fs-7 fw-bold" onclick="toggleLanguage()" id="btn-lang-toggle">
+                    EN
+                </button>
                 <button id="btn-install-shortcut" class="btn btn-sm btn-warning text-dark fw-bold rounded-pill px-2 fs-7" onclick="installAppShortcut()" style="display: none;">
-                    <i class="fa-solid fa-mobile-screen-button me-1"></i> تثبيت
+                    <i class="fa-solid fa-mobile-screen-button me-1"></i> <span id="txt-install">تثبيت</span>
                 </button>
                 <button class="btn btn-sm btn-outline-light rounded-circle" onclick="renderAll()" title="تحديث">
                     <i class="fa-solid fa-rotate-right"></i>
@@ -346,35 +370,35 @@
             <span id="sync-status-text" class="fs-7 fw-bold text-muted">غير مرتبط بـ Google Drive</span>
         </div>
         <button id="btn-auth-drive" class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-7" onclick="handleAuthClick()">
-            <i class="fa-solid fa-sync me-1"></i> ربط الحساب
+            <i class="fa-solid fa-sync me-1"></i> <span id="txt-auth-drive">ربط الحساب</span>
         </button>
     </div>
 
     <!-- Archive Mode Banner -->
-    <div id="archive-banner" class="alert alert-warning mx-3 mt-3 mb-0 rounded-3 text-xs d-flex justify-between align-items-center" style="display: none;">
-        <span><i class="fa-solid fa-clock-rotate-left me-1"></i> تعرض حالياً أرشيف شهر: <b id="archive-month-label"></b></span>
-        <button class="btn btn-sm btn-warning text-dark font-semibold px-2 py-1 fs-7" onclick="returnToCurrentMonth()">العودة للشهر الحالي</button>
+    <div id="archive-banner" class="alert alert-warning mx-3 mt-3 mb-0 rounded-3 text-xs d-flex justify-content-between align-items-center" style="display: none;">
+        <span><i class="fa-solid fa-clock-rotate-left me-1"></i> <span id="txt-archive-banner-text">تعرض حالياً أرشيف شهر:</span> <b id="archive-month-label"></b></span>
+        <button class="btn btn-sm btn-warning text-dark font-semibold px-2 py-1 fs-7" onclick="returnToCurrentMonth()" id="txt-return-current">العودة للشهر الحالي</button>
     </div>
 
     <!-- Horizontal Scroll Stats -->
     <div class="stats-wrapper">
         <div class="stat-card-mobile bg-blue">
-            <h6>إجمالي البنوك</h6>
+            <h6 id="txt-stat-banks">إجمالي البنوك</h6>
             <h4 id="total-bank-balance">0 ر.س</h4>
             <i class="fa-solid fa-building-columns"></i>
         </div>
         <div class="stat-card-mobile bg-purple">
-            <h6>مستغل البطاقات</h6>
+            <h6 id="txt-stat-credit">مستغل البطاقات</h6>
             <h4 id="total-credit-used">0 ر.س</h4>
             <i class="fa-solid fa-credit-card"></i>
         </div>
         <div class="stat-card-mobile bg-orange">
-            <h6>التزامات ثابتة</h6>
+            <h6 id="txt-stat-fixed">التزامات ثابتة</h6>
             <h4 id="total-fixed-expenses">0 ر.س</h4>
             <i class="fa-solid fa-file-invoice-dollar"></i>
         </div>
         <div class="stat-card-mobile bg-green">
-            <h6>صافي السيولة</h6>
+            <h6 id="txt-stat-net">صافي السيولة</h6>
             <h4 id="net-balance">0 ر.س</h4>
             <i class="fa-solid fa-coins"></i>
         </div>
@@ -387,7 +411,7 @@
         <div id="tab-daily" class="app-tab-content">
             <div class="card-custom">
                 <div class="card-header-custom text-danger">
-                    <span><i class="fa-solid fa-cart-shopping me-2"></i> المصروفات اليومية</span>
+                    <span><i class="fa-solid fa-cart-shopping me-2"></i> <span id="txt-title-daily">المصروفات اليومية</span></span>
                     <span class="badge bg-danger-subtle text-danger" id="daily-count-badge">0 مصروف</span>
                 </div>
                 <div class="card-body">
@@ -396,7 +420,7 @@
                             <input type="text" id="daily-item" class="form-control" placeholder="اسم المصروف (مثال: غداء، بنزين)" required>
                         </div>
                         <div class="col-6">
-                            <input type="number" id="daily-amount" class="form-control" placeholder="المبلغ (ر.س)" step="0.01" required>
+                            <input type="number" id="daily-amount" class="form-control" placeholder="المبلغ" step="0.01" required>
                         </div>
                         <div class="col-6">
                             <input type="date" id="daily-date" class="form-control" required>
@@ -407,7 +431,7 @@
                             </select>
                         </div>
                         <div class="col-12 mt-2">
-                            <button type="submit" class="btn btn-danger btn-app w-100"><i class="fa-solid fa-plus ms-1"></i> إضافة المصروف</button>
+                            <button type="submit" class="btn btn-danger btn-app w-100"><i class="fa-solid fa-plus mx-1"></i> <span id="txt-btn-add-daily">إضافة المصروف</span></button>
                         </div>
                     </form>
 
@@ -424,7 +448,7 @@
             <!-- 1. نموذج إيداع الراتب الشهري -->
             <div class="card-custom border-success">
                 <div class="card-header-custom text-success">
-                    <span><i class="fa-solid fa-file-invoice-dollar me-2"></i> إيداع الراتب الشهري</span>
+                    <span><i class="fa-solid fa-file-invoice-dollar me-2"></i> <span id="txt-title-salary">إيداع الراتب الشهري</span></span>
                 </div>
                 <div class="card-body">
                     <form id="salary-deposit-form" class="row g-2">
@@ -434,11 +458,11 @@
                             </select>
                         </div>
                         <div class="col-12">
-                            <input type="number" id="salary-amount-input" class="form-control" placeholder="مبلغ الراتب (ر.س)" step="0.01" required>
+                            <input type="number" id="salary-amount-input" class="form-control" placeholder="مبلغ الراتب" step="0.01" required>
                         </div>
                         <div class="col-12 mt-2">
                             <button type="submit" class="btn btn-success btn-app w-100">
-                                <i class="fa-solid fa-hand-holding-dollar me-1"></i> إيداع الراتب وتحديث الرصيد
+                                <i class="fa-solid fa-hand-holding-dollar me-1"></i> <span id="txt-btn-deposit-salary">إيداع الراتب وتحديث الرصيد</span>
                             </button>
                         </div>
                     </form>
@@ -448,24 +472,24 @@
             <!-- 2. نموذج التحويل بين الحسابات -->
             <div class="card-custom border-primary">
                 <div class="card-header-custom text-primary">
-                    <span><i class="fa-solid fa-arrow-right-arrow-left me-2"></i> تحويل بين الحسابات البنكية</span>
+                    <span><i class="fa-solid fa-arrow-right-arrow-left me-2"></i> <span id="txt-title-transfer">تحويل بين الحسابات البنكية</span></span>
                 </div>
                 <div class="card-body">
                     <form id="transfer-form" class="row g-2">
                         <div class="col-6">
-                            <label class="form-label fs-7 fw-bold text-muted mb-1">من حساب:</label>
+                            <label class="form-label fs-7 fw-bold text-muted mb-1" id="txt-lbl-from">من حساب:</label>
                             <select id="transfer-from" class="form-select" required></select>
                         </div>
                         <div class="col-6">
-                            <label class="form-label fs-7 fw-bold text-muted mb-1">إلى حساب:</label>
+                            <label class="form-label fs-7 fw-bold text-muted mb-1" id="txt-lbl-to">إلى حساب:</label>
                             <select id="transfer-to" class="form-select" required></select>
                         </div>
                         <div class="col-12">
-                            <input type="number" id="transfer-amount" class="form-control" placeholder="المبلغ المراد تحويله (ر.س)" step="0.01" required>
+                            <input type="number" id="transfer-amount" class="form-control" placeholder="المبلغ المراد تحويله" step="0.01" required>
                         </div>
                         <div class="col-12 mt-2">
                             <button type="submit" class="btn btn-primary btn-app w-100">
-                                <i class="fa-solid fa-paper-plane me-1"></i> تأكيد التحويل المالي
+                                <i class="fa-solid fa-paper-plane me-1"></i> <span id="txt-btn-transfer">تأكيد التحويل المالي</span>
                             </button>
                         </div>
                     </form>
@@ -475,7 +499,7 @@
             <!-- 3. إضافة وتحديث الحسابات البنكية -->
             <div class="card-custom">
                 <div class="card-header-custom text-primary">
-                    <span><i class="fa-solid fa-building-columns me-2"></i> الحسابات البنكية (إيداع/إضافة)</span>
+                    <span><i class="fa-solid fa-building-columns me-2"></i> <span id="txt-title-banks">الحسابات البنكية (إيداع/إضافة)</span></span>
                 </div>
                 <div class="card-body">
                     <form id="bank-form" class="row g-2 mb-3">
@@ -498,7 +522,7 @@
                             <input type="number" id="bank-balance" class="form-control" placeholder="المبلغ للإضافة للرصيد" step="0.01" required>
                         </div>
                         <div class="col-4">
-                            <button type="submit" class="btn btn-primary btn-app w-100">+ إضافة</button>
+                            <button type="submit" class="btn btn-primary btn-app w-100" id="txt-btn-add-bank">+ إضافة</button>
                         </div>
                     </form>
                     <div id="bank-list-mobile"></div>
@@ -508,7 +532,7 @@
             <!-- 4. البطاقات الائتمانية -->
             <div class="card-custom">
                 <div class="card-header-custom text-purple" style="color: var(--accent-purple);">
-                    <span><i class="fa-solid fa-credit-card me-2"></i> البطاقات الائتمانية</span>
+                    <span><i class="fa-solid fa-credit-card me-2"></i> <span id="txt-title-cards">البطاقات الائتمانية</span></span>
                 </div>
                 <div class="card-body">
                     <form id="credit-card-form" class="row g-2 mb-3">
@@ -522,7 +546,7 @@
                             <input type="number" id="credit-card-used" class="form-control" placeholder="المستغل حالياً" step="0.01" value="0">
                         </div>
                         <div class="col-12 mt-2">
-                            <button type="submit" class="btn btn-dark btn-app w-100"><i class="fa-solid fa-plus ms-1"></i> إضافة بطاقة ائتمانية</button>
+                            <button type="submit" class="btn btn-dark btn-app w-100"><i class="fa-solid fa-plus mx-1"></i> <span id="txt-btn-add-card">إضافة بطاقة ائتمانية</span></button>
                         </div>
                     </form>
                     <div id="credit-card-list-mobile"></div>
@@ -534,7 +558,7 @@
         <div id="tab-fixed" class="app-tab-content" style="display: none;">
             <div class="card-custom">
                 <div class="card-header-custom text-warning" style="color: var(--accent-orange);">
-                    <span><i class="fa-solid fa-file-invoice-dollar me-2"></i> الأقساط والفواتير الشهريّة</span>
+                    <span><i class="fa-solid fa-file-invoice-dollar me-2"></i> <span id="txt-title-fixed">الأقساط والفواتير الشهريّة</span></span>
                 </div>
                 <div class="card-body">
                     <form id="fixed-form" class="row g-2 mb-3">
@@ -548,7 +572,7 @@
                             <select id="fixed-source" class="form-select" required></select>
                         </div>
                         <div class="col-12 mt-2">
-                            <button type="submit" class="btn btn-warning text-white btn-app w-100">إضافة التزام</button>
+                            <button type="submit" class="btn btn-warning text-white btn-app w-100" id="txt-btn-add-fixed">إضافة التزام</button>
                         </div>
                     </form>
                     <div id="fixed-list-mobile"></div>
@@ -557,7 +581,7 @@
 
             <div class="card-custom">
                 <div class="card-header-custom text-info" style="color: var(--accent-blue);">
-                    <span><i class="fa-solid fa-hand-holding-dollar me-2"></i> سجل الديون (دائن / مدين)</span>
+                    <span><i class="fa-solid fa-hand-holding-dollar me-2"></i> <span id="txt-title-debts">سجل الديون (دائن / مدين)</span></span>
                 </div>
                 <div class="card-body">
                     <form id="debt-form" class="row g-2 mb-3">
@@ -566,15 +590,15 @@
                         </div>
                         <div class="col-6">
                             <select id="debt-type" class="form-select" required>
-                                <option value="مدين">مدين (لـك)</option>
-                                <option value="دائن">دائن (عليك)</option>
+                                <option value="مدين" id="opt-debt-creditor">مدين (لـك)</option>
+                                <option value="دائن" id="opt-debt-debtor">دائن (عليك)</option>
                             </select>
                         </div>
                         <div class="col-8">
                             <input type="number" id="debt-amount" class="form-control" placeholder="المبلغ" step="0.01" required>
                         </div>
                         <div class="col-4">
-                            <button type="submit" class="btn btn-info text-white btn-app w-100">إضافة</button>
+                            <button type="submit" class="btn btn-info text-white btn-app w-100" id="txt-btn-add-debt">إضافة</button>
                         </div>
                     </form>
                     <div id="debt-list-mobile"></div>
@@ -586,15 +610,15 @@
         <div id="tab-archive" class="app-tab-content" style="display: none;">
             <div class="card-custom">
                 <div class="card-header-custom text-primary">
-                    <span><i class="fa-solid fa-clock-rotate-left me-2"></i> سجل الأرشيف والنسخ الاحتياطية</span>
+                    <span><i class="fa-solid fa-clock-rotate-left me-2"></i> <span id="txt-title-archive">سجل الأرشيف والنسخ الاحتياطية</span></span>
                     <button onclick="fetchArchiveList()" class="btn btn-sm btn-outline-primary rounded-pill fs-7">
-                        <i class="fa-solid fa-rotate-right me-1"></i> تحديث
+                        <i class="fa-solid fa-rotate-right me-1"></i> <span id="txt-btn-refresh-archive">تحديث</span>
                     </button>
                 </div>
                 <div class="card-body">
-                    <p class="fs-7 text-muted mb-3">اختر شهرًا سابقًا لاستعادة بياناته ومراجعتها في أي وقت:</p>
+                    <p class="fs-7 text-muted mb-3" id="txt-desc-archive">اختر شهرًا سابقًا لاستعادة بياناته ومراجعتها في أي وقت:</p>
                     <div id="archive-list-mobile">
-                        <div class="text-center text-muted fs-7 py-3">قم بتسجيل الدخول إلى Google Drive لرؤية الأرشيف.</div>
+                        <div class="text-center text-muted fs-7 py-3" id="txt-archive-no-auth">قم بتسجيل الدخول إلى Google Drive لرؤية الأرشيف.</div>
                     </div>
                 </div>
             </div>
@@ -604,37 +628,37 @@
         <div id="tab-report" class="app-tab-content" style="display: none;">
             <div class="card-custom">
                 <div class="card-header-custom text-success" style="color: var(--accent-green);">
-                    <span><i class="fa-solid fa-chart-line me-2"></i> التقرير والتقييم المالي</span>
+                    <span><i class="fa-solid fa-chart-line me-2"></i> <span id="txt-title-report">التقرير والتقييم المالي</span></span>
                 </div>
                 <div class="card-body">
                     <div class="report-box mb-3">
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted fs-7">إجمالي السيولة والأصول:</span>
+                            <span class="text-muted fs-7" id="txt-rep-lbl-assets">إجمالي السيولة والأصول:</span>
                             <span id="rep-assets" class="fw-bold text-primary">0 ر.س</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted fs-7">إجمالي الالتزامات المستحقة:</span>
+                            <span class="text-muted fs-7" id="txt-rep-lbl-liabilities">إجمالي الالتزامات المستحقة:</span>
                             <span id="rep-liabilities" class="fw-bold text-warning">0 ر.س</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted fs-7">المصروفات اليومية:</span>
+                            <span class="text-muted fs-7" id="txt-rep-lbl-daily">المصروفات اليومية:</span>
                             <span id="rep-daily" class="fw-bold text-danger">0 ر.س</span>
                         </div>
                         <hr class="my-2">
                         <div class="d-flex justify-content-between">
-                            <span class="fw-bold">إجمالي الخرج والاستهلاك:</span>
+                            <span class="fw-bold" id="txt-rep-lbl-total-spent">إجمالي الخرج والاستهلاك:</span>
                             <span id="rep-total-spent" class="fw-bold text-dark">0 ر.س</span>
                         </div>
                     </div>
 
                     <div class="text-center p-3 border rounded-3 bg-light mb-3">
-                        <div class="mb-2 text-muted fs-7">التقييم المالي العام</div>
+                        <div class="mb-2 text-muted fs-7" id="txt-eval-title">التقييم المالي العام</div>
                         <span id="eval-badge" class="badge-status bg-secondary text-white">غير محدد</span>
                         <p id="eval-text" class="text-muted fs-7 mt-3 mb-0">اضغط على زر التحديث للحصول على تحليل لحالتك المالية.</p>
                     </div>
 
                     <button class="btn btn-success btn-app w-100" onclick="calculateReport()">
-                        <i class="fa-solid fa-arrows-rotate me-1"></i> تحديث التقرير والتقييم الآن
+                        <i class="fa-solid fa-arrows-rotate me-1"></i> <span id="txt-btn-calc-report">تحديث التقرير والتقييم الآن</span>
                     </button>
                 </div>
             </div>
@@ -651,27 +675,303 @@
     <div class="bottom-nav">
         <button class="nav-item-mobile active" id="nav-daily" onclick="switchTab('daily')">
             <i class="fa-solid fa-cart-shopping"></i>
-            <span>المصاريف</span>
+            <span id="txt-nav-daily">المصاريف</span>
         </button>
         <button class="nav-item-mobile" id="nav-accounts" onclick="switchTab('accounts')">
             <i class="fa-solid fa-credit-card"></i>
-            <span>الحسابات</span>
+            <span id="txt-nav-accounts">الحسابات</span>
         </button>
         <button class="nav-item-mobile" id="nav-fixed" onclick="switchTab('fixed')">
             <i class="fa-solid fa-file-invoice-dollar"></i>
-            <span>الالتزامات</span>
+            <span id="txt-nav-fixed">الالتزامات</span>
         </button>
         <button class="nav-item-mobile" id="nav-archive" onclick="switchTab('archive')">
             <i class="fa-solid fa-clock-rotate-left"></i>
-            <span>السجل</span>
+            <span id="txt-nav-archive">السجل</span>
         </button>
         <button class="nav-item-mobile" id="nav-report" onclick="switchTab('report')">
             <i class="fa-solid fa-chart-pie"></i>
-            <span>التقرير</span>
+            <span id="txt-nav-report">التقرير</span>
         </button>
     </div>
 
 <script>
+    let currentLang = localStorage.getItem('app_lang') || 'ar';
+
+    const translations = {
+        ar: {
+            appTitle: "مديرك المالي",
+            subtitle: "إدارة ومتابعة المصاريف بسهولة",
+            install: "تثبيت",
+            syncConnected: "متصل ومربوط بـ Google Drive",
+            syncDisconnected: "غير مرتبط بـ Google Drive",
+            authDrive: "ربط الحساب",
+            connected: "متصل",
+            archiveBanner: "تعرض حالياً أرشيف شهر:",
+            returnCurrent: "العودة للشهر الحالي",
+            statBanks: "إجمالي البنوك",
+            statCredit: "مستغل البطاقات",
+            statFixed: "التزامات ثابتة",
+            statNet: "صافي السيولة",
+            titleDaily: "المصروفات اليومية",
+            phDailyItem: "اسم المصروف (مثال: غداء، بنزين)",
+            phAmount: "المبلغ (ر.س)",
+            btnAddDaily: "إضافة المصروف",
+            cash: "كاش / نقدي",
+            titleSalary: "إيداع الراتب الشهري",
+            phSalaryBank: "اختر البنك المحول إليه الراتب...",
+            phSalaryAmt: "مبلغ الراتب (ر.س)",
+            btnDepositSalary: "إيداع الراتب وتحديث الرصيد",
+            titleTransfer: "تحويل بين الحسابات البنكية",
+            lblFrom: "من حساب:",
+            lblTo: "إلى حساب:",
+            phTransferBank: "اختر البنك...",
+            phTransferAmt: "المبلغ المراد تحويله (ر.س)",
+            btnTransfer: "تأكيد التحويل المالي",
+            titleBanks: "الحسابات البنكية (إيداع/إضافة)",
+            phBankAmt: "المبلغ للإضافة للرصيد",
+            btnAddBank: "+ إضافة",
+            titleCards: "البطاقات الائتمانية",
+            phCardName: "اسم البطاقة (مثال: فيزا الراجحي)",
+            phCardLimit: "الحد الائتماني",
+            phCardUsed: "المستغل حالياً",
+            btnAddCard: "إضافة بطاقة ائتمانية",
+            titleFixed: "الأقساط والفواتير الشهريّة",
+            phFixedTitle: "الوصف (مثال: قسط سيارة، إيجار)",
+            btnAddFixed: "إضافة التزام",
+            titleDebts: "سجل الديون (دائن / مدين)",
+            phDebtPerson: "الجهة / الشخص",
+            optCreditor: "مدين (لـك)",
+            optDebtor: "دائن (عليك)",
+            btnAddDebt: "إضافة",
+            titleArchive: "سجل الأرشيف والنسخ الاحتياطية",
+            btnRefreshArchive: "تحديث",
+            descArchive: "اختر شهرًا سابقًا لاستعادة بياناته ومراجعتها في أي وقت:",
+            archiveNoAuth: "قم بتسجيل الدخول إلى Google Drive لرؤية الأرشيف.",
+            titleReport: "التقرير والتقييم المالي",
+            repAssets: "إجمالي السيولة والأصول:",
+            repLiabilities: "إجمالي الالتزامات المستحقة:",
+            repDaily: "المصروفات اليومية:",
+            repTotalSpent: "إجمالي الخرج والاستهلاك:",
+            evalTitle: "التقييم المالي العام",
+            evalUndefined: "غير محدد",
+            evalPrompt: "اضغط على زر التحديث للحصول على تحليل لحالتك المالية.",
+            btnCalcReport: "تحديث التقرير والتقييم الآن",
+            navDaily: "المصاريف",
+            navAccounts: "الحسابات",
+            navFixed: "الالتزامات",
+            navArchive: "السجل",
+            navReport: "التقرير",
+            currency: "ر.س",
+            bankAccount: "حساب بنكي",
+            noBanks: "لا توجد حسابات مضافة",
+            limit: "الحد",
+            remaining: "المتبقي",
+            noCards: "لا توجد بطاقات ائتمانية",
+            source: "المصدر",
+            unspecified: "غير محدد",
+            noFixed: "لا توجد التزامات مسجلة",
+            noDebts: "لا يوجد ديون مسجلة",
+            noDaily: "لم تعبر أي مصاريف اليوم",
+            itemCount: "مصروف",
+            view: "استعراض",
+            backup: "نسخة محفوظة",
+            loadingBackups: "جاري تحميل النسخ...",
+            noBackups: "لا توجد نسخ محفوظة في Drive",
+            archiveFetchError: "تعذر جلب الأرشيف!",
+            syncSuccess: "تم التزامن وتحديث البيانات في Drive",
+            evalNoData: "لا توجد بيانات كافية",
+            evalNoDataDesc: "يرجى إدخال أرصدتك ومصروفاتك للبدء في التقييم.",
+            evalRisk: "مخاطر عالية (حرِج)",
+            evalRiskDesc: "مصاريفك والتزاماتك تتجاوز إجمالي أرصدتك المتاحة! ينصح بالحد من المصروفات اليومية.",
+            evalHigh: "استهلاك مرتفع",
+            evalHighDesc: "تستهلك {ratio}% من مجموع السيولة. حاول ضبط النفقات لزيادة الادخار.",
+            evalBalanced: "إدارة متوازنة",
+            evalBalancedDesc: "مصاريفك ضمن النطاق المقبول ({ratio}%). وضعك المالي ممتاز ومتوازن.",
+            evalExcellent: "إدارة ممتازة جداً",
+            evalExcellentDesc: "أداء ممتاز! استهلاكك منخفض ({ratio}%). واصل التخطيط والادخار الناجح."
+        },
+        en: {
+            appTitle: "Financial Manager",
+            subtitle: "Manage and track expenses easily",
+            install: "Install",
+            syncConnected: "Connected to Google Drive",
+            syncDisconnected: "Not connected to Google Drive",
+            authDrive: "Link Account",
+            connected: "Connected",
+            archiveBanner: "Currently viewing archive for:",
+            returnCurrent: "Back to Current Month",
+            statBanks: "Total Banks",
+            statCredit: "Credit Used",
+            statFixed: "Fixed Expenses",
+            statNet: "Net Liquidity",
+            titleDaily: "Daily Expenses",
+            phDailyItem: "Expense Name (e.g. Lunch, Gas)",
+            phAmount: "Amount (SAR)",
+            btnAddDaily: "Add Expense",
+            cash: "Cash",
+            titleSalary: "Monthly Salary Deposit",
+            phSalaryBank: "Select salary bank...",
+            phSalaryAmt: "Salary Amount (SAR)",
+            btnDepositSalary: "Deposit Salary & Update Balance",
+            titleTransfer: "Transfer Between Accounts",
+            lblFrom: "From Account:",
+            lblTo: "To Account:",
+            phTransferBank: "Select Bank...",
+            phTransferAmt: "Transfer Amount (SAR)",
+            btnTransfer: "Confirm Transfer",
+            titleBanks: "Bank Accounts (Deposit/Add)",
+            phBankAmt: "Amount to Add",
+            btnAddBank: "+ Add",
+            titleCards: "Credit Cards",
+            phCardName: "Card Name (e.g. Visa Classic)",
+            phCardLimit: "Credit Limit",
+            phCardUsed: "Currently Used",
+            btnAddCard: "Add Credit Card",
+            titleFixed: "Monthly Bills & Installments",
+            phFixedTitle: "Description (e.g. Car Loan, Rent)",
+            btnAddFixed: "Add Commitment",
+            titleDebts: "Debts Log (Debtor / Creditor)",
+            phDebtPerson: "Party / Person",
+            optCreditor: "Owed to You (Creditor)",
+            optDebtor: "You Owe (Debtor)",
+            btnAddDebt: "Add",
+            titleArchive: "Archive & Backups Log",
+            btnRefreshArchive: "Refresh",
+            descArchive: "Select a previous month to restore and review data:",
+            archiveNoAuth: "Log in to Google Drive to view archives.",
+            titleReport: "Report & Financial Rating",
+            repAssets: "Total Liquidity & Assets:",
+            repLiabilities: "Total Obligations:",
+            repDaily: "Daily Expenses:",
+            repTotalSpent: "Total Spent & Outflow:",
+            evalTitle: "Overall Financial Assessment",
+            evalUndefined: "Undefined",
+            evalPrompt: "Click the refresh button to analyze your financial health.",
+            btnCalcReport: "Update Report & Rating Now",
+            navDaily: "Expenses",
+            navAccounts: "Accounts",
+            navFixed: "Bills",
+            navArchive: "Archive",
+            navReport: "Report",
+            currency: "SAR",
+            bankAccount: "Bank Account",
+            noBanks: "No bank accounts added",
+            limit: "Limit",
+            remaining: "Remaining",
+            noCards: "No credit cards added",
+            source: "Source",
+            unspecified: "Unspecified",
+            noFixed: "No commitments recorded",
+            noDebts: "No debts recorded",
+            noDaily: "No expenses recorded today",
+            itemCount: "item(s)",
+            view: "View",
+            backup: "Backup File",
+            loadingBackups: "Loading backups...",
+            noBackups: "No backup files found in Drive",
+            archiveFetchError: "Failed to fetch archives!",
+            syncSuccess: "Data synced and updated in Drive",
+            evalNoData: "Insufficient Data",
+            evalNoDataDesc: "Please enter your balances and expenses to generate a report.",
+            evalRisk: "High Risk (Critical)",
+            evalRiskDesc: "Your expenses exceed your available balance! Reduce daily spending.",
+            evalHigh: "High Consumption",
+            evalHighDesc: "You consume {ratio}% of total liquidity. Try to control expenses.",
+            evalBalanced: "Balanced Management",
+            evalBalancedDesc: "Your expenses are within acceptable bounds ({ratio}%). Great balance!",
+            evalExcellent: "Excellent Management",
+            evalExcellentDesc: "Awesome! Consumption is low ({ratio}%). Keep up saving!"
+        }
+    };
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem('app_lang', lang);
+        
+        const html = document.documentElement;
+        const bsCss = document.getElementById('bootstrap-css');
+        const langBtn = document.getElementById('btn-lang-toggle');
+
+        if (lang === 'en') {
+            html.setAttribute('lang', 'en');
+            html.setAttribute('dir', 'ltr');
+            bsCss.setAttribute('href', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css');
+            langBtn.innerText = 'عربي';
+        } else {
+            html.setAttribute('lang', 'ar');
+            html.setAttribute('dir', 'rtl');
+            bsCss.setAttribute('href', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css');
+            langBtn.innerText = 'EN';
+        }
+
+        const t = translations[lang];
+
+        // Static Elements Text
+        document.getElementById('app-title-tag').innerText = t.appTitle;
+        document.getElementById('txt-app-title').innerText = t.appTitle;
+        document.getElementById('txt-install').innerText = t.install;
+        document.getElementById('txt-archive-banner-text').innerText = t.archiveBanner;
+        document.getElementById('txt-return-current').innerText = t.returnCurrent;
+        document.getElementById('txt-stat-banks').innerText = t.statBanks;
+        document.getElementById('txt-stat-credit').innerText = t.statCredit;
+        document.getElementById('txt-stat-fixed').innerText = t.statFixed;
+        document.getElementById('txt-stat-net').innerText = t.statNet;
+        document.getElementById('txt-title-daily').innerText = t.titleDaily;
+        document.getElementById('txt-btn-add-daily').innerText = t.btnAddDaily;
+        document.getElementById('txt-title-salary').innerText = t.titleSalary;
+        document.getElementById('txt-btn-deposit-salary').innerText = t.btnDepositSalary;
+        document.getElementById('txt-title-transfer').innerText = t.titleTransfer;
+        document.getElementById('txt-lbl-from').innerText = t.lblFrom;
+        document.getElementById('txt-lbl-to').innerText = t.lblTo;
+        document.getElementById('txt-btn-transfer').innerText = t.btnTransfer;
+        document.getElementById('txt-title-banks').innerText = t.titleBanks;
+        document.getElementById('txt-btn-add-bank').innerText = t.btnAddBank;
+        document.getElementById('txt-title-cards').innerText = t.titleCards;
+        document.getElementById('txt-btn-add-card').innerText = t.btnAddCard;
+        document.getElementById('txt-title-fixed').innerText = t.titleFixed;
+        document.getElementById('txt-btn-add-fixed').innerText = t.btnAddFixed;
+        document.getElementById('txt-title-debts').innerText = t.titleDebts;
+        document.getElementById('opt-debt-creditor').innerText = t.optCreditor;
+        document.getElementById('opt-debt-debtor').innerText = t.optDebtor;
+        document.getElementById('txt-btn-add-debt').innerText = t.btnAddDebt;
+        document.getElementById('txt-title-archive').innerText = t.titleArchive;
+        document.getElementById('txt-btn-refresh-archive').innerText = t.btnRefreshArchive;
+        document.getElementById('txt-desc-archive').innerText = t.descArchive;
+        document.getElementById('txt-title-report').innerText = t.titleReport;
+        document.getElementById('txt-rep-lbl-assets').innerText = t.repAssets;
+        document.getElementById('txt-rep-lbl-liabilities').innerText = t.repLiabilities;
+        document.getElementById('txt-rep-lbl-daily').innerText = t.repDaily;
+        document.getElementById('txt-rep-lbl-total-spent').innerText = t.repTotalSpent;
+        document.getElementById('txt-eval-title').innerText = t.evalTitle;
+        document.getElementById('txt-btn-calc-report').innerText = t.btnCalcReport;
+        document.getElementById('txt-nav-daily').innerText = t.navDaily;
+        document.getElementById('txt-nav-accounts').innerText = t.navAccounts;
+        document.getElementById('txt-nav-fixed').innerText = t.navFixed;
+        document.getElementById('txt-nav-archive').innerText = t.navArchive;
+        document.getElementById('txt-nav-report').innerText = t.navReport;
+
+        // Placeholders
+        document.getElementById('daily-item').placeholder = t.phDailyItem;
+        document.getElementById('daily-amount').placeholder = t.phAmount;
+        document.getElementById('salary-amount-input').placeholder = t.phSalaryAmt;
+        document.getElementById('transfer-amount').placeholder = t.phTransferAmt;
+        document.getElementById('bank-balance').placeholder = t.phBankAmt;
+        document.getElementById('credit-card-name').placeholder = t.phCardName;
+        document.getElementById('credit-card-limit').placeholder = t.phCardLimit;
+        document.getElementById('credit-card-used').placeholder = t.phCardUsed;
+        document.getElementById('fixed-title').placeholder = t.phFixedTitle;
+        document.getElementById('fixed-amount').placeholder = t.phAmount;
+        document.getElementById('debt-person').placeholder = t.phDebtPerson;
+        document.getElementById('debt-amount').placeholder = t.phAmount;
+
+        renderAll();
+    }
+
+    function toggleLanguage() {
+        setLanguage(currentLang === 'ar' ? 'en' : 'ar');
+    }
+
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
@@ -689,6 +989,7 @@
     });
 
     function installAppShortcut() {
+        const t = translations[currentLang];
         if (deferredPrompt) {
             deferredPrompt.prompt();
             deferredPrompt.userChoice.then((choiceResult) => {
@@ -698,7 +999,7 @@
                 deferredPrompt = null;
             });
         } else {
-            alert('الإضافة لسطح المكتب: اضغط على خيارات المتصفح (⋮ أو زر المشاركة) ثم اختر "الإضافة إلى الشاشة الرئيسية"');
+            alert(currentLang === 'ar' ? 'الإضافة لسطح المكتب: اضغط على خيارات المتصفح (⋮ أو زر المشاركة) ثم اختر "الإضافة إلى الشاشة الرئيسية"' : 'To install: Tap browser options (⋮ or Share) and select "Add to Home Screen"');
         }
     }
 
@@ -743,24 +1044,25 @@
     let accessToken = null;
 
     function updateDriveSyncUI(isConnected, statusText = '') {
+        const t = translations[currentLang];
         const syncStatusText = document.getElementById('sync-status-text');
         const btnAuthDrive = document.getElementById('btn-auth-drive');
         const syncIcon = document.getElementById('sync-icon');
 
         if (isConnected) {
-            syncStatusText.innerText = statusText || 'متصل ومربوط بـ Google Drive';
+            syncStatusText.innerText = statusText || t.syncConnected;
             syncStatusText.className = 'fs-7 fw-bold text-success';
             syncIcon.className = 'fa-brands fa-google-drive text-success fs-5';
             
-            btnAuthDrive.innerHTML = '<i class="fa-solid fa-check me-1"></i> متصل';
+            btnAuthDrive.innerHTML = `<i class="fa-solid fa-check me-1"></i> ${t.connected}`;
             btnAuthDrive.className = 'btn btn-sm btn-success rounded-pill px-3 fs-7 disabled';
             btnAuthDrive.removeAttribute('onclick');
         } else {
-            syncStatusText.innerText = statusText || 'غير مرتبط بـ Google Drive';
+            syncStatusText.innerText = statusText || t.syncDisconnected;
             syncStatusText.className = 'fs-7 fw-bold text-muted';
             syncIcon.className = 'fa-brands fa-google-drive text-secondary fs-5';
             
-            btnAuthDrive.innerHTML = '<i class="fa-solid fa-sync me-1"></i> ربط الحساب';
+            btnAuthDrive.innerHTML = `<i class="fa-solid fa-sync me-1"></i> ${t.authDrive}`;
             btnAuthDrive.className = 'btn btn-sm btn-outline-primary rounded-pill px-3 fs-7';
             btnAuthDrive.setAttribute('onclick', 'handleAuthClick()');
         }
@@ -784,6 +1086,7 @@
     }
 
     window.onload = () => {
+        setLanguage(currentLang);
         initGoogleAuth();
         document.getElementById('daily-date').valueAsDate = new Date();
         loadMonthData();
@@ -802,12 +1105,13 @@
         if (tokenClient) {
             tokenClient.requestAccessToken({ prompt: 'consent' });
         } else {
-            alert('تعذر الاتصال بـ Google Auth، يرجى التاكد من الاتصال بالإنترنت.');
+            alert(currentLang === 'ar' ? 'تعذر الاتصال بـ Google Auth، يرجى التاكد من الاتصال بالإنترنت.' : 'Could not connect to Google Auth, please check connection.');
         }
     }
 
     async function saveToDrive() {
         if (!accessToken) return;
+        const t = translations[currentLang];
 
         const fileName = `backup_${currentMonth}.json`;
         const payload = {
@@ -844,7 +1148,7 @@
                 body: formData
             });
 
-            updateDriveSyncUI(true, 'تم التزامن وتحديث البيانات في Drive');
+            updateDriveSyncUI(true, t.syncSuccess);
             fetchArchiveList();
         } catch (err) {
             console.error('Save to drive error:', err);
@@ -853,9 +1157,10 @@
 
     async function fetchArchiveList() {
         if (!accessToken) return;
+        const t = translations[currentLang];
 
         let archiveContainer = document.getElementById('archive-list-mobile');
-        archiveContainer.innerHTML = '<div class="text-center text-muted fs-7 py-3">جاري تحميل النسخ...</div>';
+        archiveContainer.innerHTML = `<div class="text-center text-muted fs-7 py-3">${t.loadingBackups}</div>`;
 
         try {
             let res = await fetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name contains 'backup_'`, {
@@ -864,7 +1169,7 @@
             let data = await res.json();
 
             if (!data.files || data.files.length === 0) {
-                archiveContainer.innerHTML = '<div class="text-center text-muted fs-7 py-3">لا توجد نسخ محفوظة في Drive</div>';
+                archiveContainer.innerHTML = `<div class="text-center text-muted fs-7 py-3">${t.noBackups}</div>`;
                 return;
             }
 
@@ -873,17 +1178,17 @@
                 return `
                     <div class="data-card-item" style="border-right-color: #2563eb;">
                         <div>
-                            <div class="item-title">شهر: ${monthLabel}</div>
-                            <div class="item-sub">نسخة محفوظة</div>
+                            <div class="item-title">${currentLang === 'ar' ? 'شهر' : 'Month'}: ${monthLabel}</div>
+                            <div class="item-sub">${t.backup}</div>
                         </div>
                         <button class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-7" onclick="restoreArchive('${f.id}', '${monthLabel}')">
-                            <i class="fa-solid fa-download me-1"></i> استعراض
+                            <i class="fa-solid fa-download me-1"></i> ${t.view}
                         </button>
                     </div>`;
             }).join('');
         } catch (err) {
             console.error(err);
-            archiveContainer.innerHTML = '<div class="text-center text-danger fs-7 py-3">تعذر جلب الأرشيف!</div>';
+            archiveContainer.innerHTML = `<div class="text-center text-danger fs-7 py-3">${t.archiveFetchError}</div>`;
         }
     }
 
@@ -911,7 +1216,7 @@
             switchTab('daily');
         } catch (err) {
             console.error(err);
-            alert('تعذر تحميل بيانات الملف المحدد.');
+            alert(currentLang === 'ar' ? 'تعذر تحميل بيانات الملف المحدد.' : 'Failed to load selected file data.');
         }
     }
 
@@ -944,24 +1249,24 @@
     // 1. إضافة الراتب الشهري (إضافة تراكمية على الرصيد القديم)
     document.getElementById('salary-deposit-form').onsubmit = (e) => {
         e.preventDefault();
-        if (isViewingArchive) return alert('أنت تعرض الأرشيف فقط.');
+        if (isViewingArchive) return alert(currentLang === 'ar' ? 'أنت تعرض الأرشيف فقط.' : 'You are viewing archive only.');
 
         const targetBank = document.getElementById('salary-bank-target').value;
         const salaryAmount = parseFloat(document.getElementById('salary-amount-input').value);
 
         if (!targetBank || isNaN(salaryAmount) || salaryAmount <= 0) {
-            alert('يرجى اختيار البنك وإدخال مبلغ راتب صحيح.');
+            alert(currentLang === 'ar' ? 'يرجى اختيار البنك وإدخال مبلغ راتب صحيح.' : 'Please select bank and enter valid salary.');
             return;
         }
 
         let bankIndex = banks.findIndex(b => b.name === targetBank);
         if (bankIndex !== -1) {
-            banks[bankIndex].balance += salaryAmount; // جمع الراتب على المبلغ القديم
+            banks[bankIndex].balance += salaryAmount;
         } else {
             banks.push({ name: targetBank, balance: salaryAmount });
         }
 
-        alert(`تمت إضافة الراتب بمبلغ (${salaryAmount.toFixed(2)} ر.س) بنجاح إلى حساب: ${targetBank}`);
+        alert(currentLang === 'ar' ? `تمت إضافة الراتب بمبلغ (${salaryAmount.toFixed(2)} ر.س) بنجاح إلى حساب: ${targetBank}` : `Salary of (${salaryAmount.toFixed(2)} SAR) added to ${targetBank}`);
         document.getElementById('salary-deposit-form').reset();
         saveData();
     };
@@ -969,19 +1274,19 @@
     // 2. التحويل بين الحسابات البنكية
     document.getElementById('transfer-form').onsubmit = (e) => {
         e.preventDefault();
-        if (isViewingArchive) return alert('أنت تعرض الأرشيف فقط.');
+        if (isViewingArchive) return alert(currentLang === 'ar' ? 'أنت تعرض الأرشيف فقط.' : 'You are viewing archive only.');
 
         const fromBank = document.getElementById('transfer-from').value;
         const toBank = document.getElementById('transfer-to').value;
         const transferAmt = parseFloat(document.getElementById('transfer-amount').value);
 
         if (fromBank === toBank) {
-            alert('عذراً، لا يمكن التحويل لنفس الحساب البنكي!');
+            alert(currentLang === 'ar' ? 'عذراً، لا يمكن التحويل لنفس الحساب البنكي!' : 'Cannot transfer to the same account!');
             return;
         }
 
         if (isNaN(transferAmt) || transferAmt <= 0) {
-            alert('يرجى إدخال مبلغ تحويل صحيح.');
+            alert(currentLang === 'ar' ? 'يرجى إدخال مبلغ تحويل صحيح.' : 'Please enter valid transfer amount.');
             return;
         }
 
@@ -989,16 +1294,15 @@
         let toIndex = banks.findIndex(b => b.name === toBank);
 
         if (fromIndex === -1) {
-            alert('الحساب المحول منه غير موجود!');
+            alert(currentLang === 'ar' ? 'الحساب المحول منه غير موجود!' : 'Source account does not exist!');
             return;
         }
 
         if (banks[fromIndex].balance < transferAmt) {
-            alert(`الرصيد في (${fromBank}) غير كافٍ للتحويل! الرصيد الحالي: ${banks[fromIndex].balance.toFixed(2)} ر.س`);
+            alert(currentLang === 'ar' ? `الرصيد في (${fromBank}) غير كافٍ للتحويل! الرصيد الحالي: ${banks[fromIndex].balance.toFixed(2)} ر.س` : `Insufficient balance in (${fromBank})! Current: ${banks[fromIndex].balance.toFixed(2)} SAR`);
             return;
         }
 
-        // إتمام عملية الخصم والإضافة
         banks[fromIndex].balance -= transferAmt;
 
         if (toIndex !== -1) {
@@ -1007,7 +1311,7 @@
             banks.push({ name: toBank, balance: transferAmt });
         }
 
-        alert(`تم تحويل ${transferAmt.toFixed(2)} ر.س بنجاح من ${fromBank} إلى ${toBank}`);
+        alert(currentLang === 'ar' ? `تم تحويل ${transferAmt.toFixed(2)} ر.س بنجاح من ${fromBank} إلى ${toBank}` : `Transferred ${transferAmt.toFixed(2)} SAR from ${fromBank} to ${toBank}`);
         document.getElementById('transfer-form').reset();
         saveData();
     };
@@ -1015,14 +1319,14 @@
     // 3. إضافة أو إيداع مبلغ لبنك مسجل (إضافة المبلغ الجديد على القديم)
     document.getElementById('bank-form').onsubmit = (e) => {
         e.preventDefault();
-        if (isViewingArchive) return alert('أنت تعرض الأرشيف فقط.');
+        if (isViewingArchive) return alert(currentLang === 'ar' ? 'أنت تعرض الأرشيف فقط.' : 'You are viewing archive only.');
         
         const selectedBank = document.getElementById('bank-name').value;
         const addedBalance = parseFloat(document.getElementById('bank-balance').value);
 
         let bankIndex = banks.findIndex(b => b.name === selectedBank);
         if (bankIndex !== -1) {
-            banks[bankIndex].balance += addedBalance; // التعديل بالإجمال: إضافة الجديد للقديم
+            banks[bankIndex].balance += addedBalance;
         } else {
             banks.push({ name: selectedBank, balance: addedBalance });
         }
@@ -1033,7 +1337,7 @@
 
     document.getElementById('credit-card-form').onsubmit = (e) => {
         e.preventDefault();
-        if (isViewingArchive) return alert('أنت تعرض الأرشيف فقط.');
+        if (isViewingArchive) return alert(currentLang === 'ar' ? 'أنت تعرض الأرشيف فقط.' : 'You are viewing archive only.');
         creditCards.push({
             name: document.getElementById('credit-card-name').value,
             limit: parseFloat(document.getElementById('credit-card-limit').value),
@@ -1045,7 +1349,7 @@
 
     document.getElementById('fixed-form').onsubmit = (e) => {
         e.preventDefault();
-        if (isViewingArchive) return alert('أنت تعرض الأرشيف فقط.');
+        if (isViewingArchive) return alert(currentLang === 'ar' ? 'أنت تعرض الأرشيف فقط.' : 'You are viewing archive only.');
         let amount = parseFloat(document.getElementById('fixed-amount').value);
         let source = document.getElementById('fixed-source').value;
 
@@ -1062,7 +1366,7 @@
 
     document.getElementById('debt-form').onsubmit = (e) => {
         e.preventDefault();
-        if (isViewingArchive) return alert('أنت تعرض الأرشيف فقط.');
+        if (isViewingArchive) return alert(currentLang === 'ar' ? 'أنت تعرض الأرشيف فقط.' : 'You are viewing archive only.');
         debts.push({
             person: document.getElementById('debt-person').value,
             type: document.getElementById('debt-type').value,
@@ -1074,7 +1378,7 @@
 
     document.getElementById('daily-form').onsubmit = (e) => {
         e.preventDefault();
-        if (isViewingArchive) return alert('أنت تعرض الأرشيف فقط.');
+        if (isViewingArchive) return alert(currentLang === 'ar' ? 'أنت تعرض الأرشيف فقط.' : 'You are viewing archive only.');
         let amount = parseFloat(document.getElementById('daily-amount').value);
         let source = document.getElementById('daily-source').value;
 
@@ -1093,12 +1397,13 @@
     };
 
     function processPayment(source, amount) {
-        if (source !== 'كاش / نقدي' && source !== 'غير محدد') {
+        const t = translations[currentLang];
+        if (source !== 'كاش / نقدي' && source !== 'Cash' && source !== t.unspecified) {
             let bankIndex = banks.findIndex(b => b.name === source);
             if (bankIndex !== -1) {
                 banks[bankIndex].balance -= amount;
             } else {
-                let ccIndex = creditCards.findIndex(c => `بطاقة: ${c.name}` === source);
+                let ccIndex = creditCards.findIndex(c => `بطاقة: ${c.name}` === source || `Card: ${c.name}` === source);
                 if (ccIndex !== -1) {
                     creditCards[ccIndex].used += amount;
                 }
@@ -1107,18 +1412,18 @@
     }
 
     function editItem(type, index) {
-        if (isViewingArchive) return alert('لا يمكن التعديل أثناء تصفح الأرشيف.');
+        if (isViewingArchive) return alert(currentLang === 'ar' ? 'لا يمكن التعديل أثناء تصفح الأرشيف.' : 'Editing not allowed in archive mode.');
         
         if (type === 'bank') {
-            let newVal = prompt(`تعديل رصيد البنك (${banks[index].name}) المباشر:`, banks[index].balance);
+            let newVal = prompt(`${currentLang === 'ar' ? 'تعديل رصيد البنك' : 'Edit bank balance'} (${banks[index].name}):`, banks[index].balance);
             if (newVal !== null && !isNaN(parseFloat(newVal))) {
                 banks[index].balance = parseFloat(newVal);
                 saveData();
             }
         } else if (type === 'credit') {
             let c = creditCards[index];
-            let newLimit = prompt(`تعديل الحد الائتماني لـ (${c.name}):`, c.limit);
-            let newUsed = prompt(`تعديل المستغل حالياً لـ (${c.name}):`, c.used);
+            let newLimit = prompt(`${currentLang === 'ar' ? 'تعديل الحد الائتماني لـ' : 'Edit limit for'} (${c.name}):`, c.limit);
+            let newUsed = prompt(`${currentLang === 'ar' ? 'تعديل المستغل حالياً لـ' : 'Edit used amount for'} (${c.name}):`, c.used);
             if (newLimit !== null && newUsed !== null && !isNaN(parseFloat(newLimit)) && !isNaN(parseFloat(newUsed))) {
                 c.limit = parseFloat(newLimit);
                 c.used = parseFloat(newUsed);
@@ -1126,8 +1431,8 @@
             }
         } else if (type === 'fixed') {
             let f = fixedExpenses[index];
-            let newTitle = prompt('تعديل الوصف:', f.title);
-            let newAmount = prompt('تعديل المبلغ:', f.amount);
+            let newTitle = prompt(currentLang === 'ar' ? 'تعديل الوصف:' : 'Edit description:', f.title);
+            let newAmount = prompt(currentLang === 'ar' ? 'تعديل المبلغ:' : 'Edit amount:', f.amount);
             if (newTitle && newAmount !== null && !isNaN(parseFloat(newAmount))) {
                 f.title = newTitle;
                 f.amount = parseFloat(newAmount);
@@ -1135,8 +1440,8 @@
             }
         } else if (type === 'debt') {
             let d = debts[index];
-            let newPerson = prompt('تعديل الجهة/الشخص:', d.person);
-            let newAmount = prompt('تعديل المبلغ:', d.amount);
+            let newPerson = prompt(currentLang === 'ar' ? 'تعديل الجهة/الشخص:' : 'Edit person/party:', d.person);
+            let newAmount = prompt(currentLang === 'ar' ? 'تعديل المبلغ:' : 'Edit amount:', d.amount);
             if (newPerson && newAmount !== null && !isNaN(parseFloat(newAmount))) {
                 d.person = newPerson;
                 d.amount = parseFloat(newAmount);
@@ -1144,8 +1449,8 @@
             }
         } else if (type === 'daily') {
             let dl = dailyExpenses[index];
-            let newItem = prompt('تعديل اسم المصروف:', dl.item);
-            let newAmount = prompt('تعديل المبلغ:', dl.amount);
+            let newItem = prompt(currentLang === 'ar' ? 'تعديل اسم المصروف:' : 'Edit expense name:', dl.item);
+            let newAmount = prompt(currentLang === 'ar' ? 'تعديل المبلغ:' : 'Edit amount:', dl.amount);
             if (newItem && newAmount !== null && !isNaN(parseFloat(newAmount))) {
                 dl.item = newItem;
                 dl.amount = parseFloat(newAmount);
@@ -1155,7 +1460,7 @@
     }
 
     function deleteItem(type, index) {
-        if (isViewingArchive) return alert('لا يمكن الحذف أثناء تصفح الأرشيف.');
+        if (isViewingArchive) return alert(currentLang === 'ar' ? 'لا يمكن الحذف أثناء تصفح الأرشيف.' : 'Deletion not allowed in archive mode.');
         if(type === 'bank') banks.splice(index, 1);
         if(type === 'credit') creditCards.splice(index, 1);
         if(type === 'fixed') {
@@ -1173,12 +1478,13 @@
     }
 
     function revertPayment(source, amount) {
-        if (source && source !== 'كاش / نقدي') {
+        const t = translations[currentLang];
+        if (source && source !== 'كاش / نقدي' && source !== 'Cash') {
             let bankIndex = banks.findIndex(b => b.name === source);
             if (bankIndex !== -1) {
                 banks[bankIndex].balance += amount;
             } else {
-                let ccIndex = creditCards.findIndex(c => `بطاقة: ${c.name}` === source);
+                let ccIndex = creditCards.findIndex(c => `بطاقة: ${c.name}` === source || `Card: ${c.name}` === source);
                 if (ccIndex !== -1) {
                     creditCards[ccIndex].used -= amount;
                 }
@@ -1187,18 +1493,18 @@
     }
 
     function updateSelectOptions() {
+        const t = translations[currentLang];
         let dailySelect = document.getElementById('daily-source');
         let fixedSelect = document.getElementById('fixed-source');
         let salaryBankSelect = document.getElementById('salary-bank-target');
         let transferFromSelect = document.getElementById('transfer-from');
         let transferToSelect = document.getElementById('transfer-to');
 
-        // قائمة المصروفات
         [dailySelect, fixedSelect].forEach(select => {
-            select.innerHTML = '<option value="كاش / نقدي">كاش / نقدي</option>';
+            select.innerHTML = `<option value="${t.cash}">${t.cash}</option>`;
             if(banks.length > 0) {
                 let bankGroup = document.createElement('optgroup');
-                bankGroup.label = "الحسابات البنكية";
+                bankGroup.label = currentLang === 'ar' ? "الحسابات البنكية" : "Bank Accounts";
                 banks.forEach(b => {
                     let opt = document.createElement('option');
                     opt.value = b.name;
@@ -1210,30 +1516,29 @@
 
             if(creditCards.length > 0) {
                 let ccGroup = document.createElement('optgroup');
-                ccGroup.label = "البطاقات الائتمانية";
+                ccGroup.label = currentLang === 'ar' ? "البطاقات الائتمانية" : "Credit Cards";
                 creditCards.forEach(c => {
                     let opt = document.createElement('option');
-                    opt.value = `بطاقة: ${c.name}`;
-                    opt.innerText = `بطاقة: ${c.name}`;
+                    let valName = currentLang === 'ar' ? `بطاقة: ${c.name}` : `Card: ${c.name}`;
+                    opt.value = valName;
+                    opt.innerText = valName;
                     ccGroup.appendChild(opt);
                 });
                 select.appendChild(ccGroup);
             }
         });
 
-        // قائمة خيارات الراتب والتحويل البنكي
         const defaultBankOptions = [
             "البنك الأهلي السعودي", "مصرف الراجحي", "بنك الرياض", 
             "البنك السعودي الأول (SAB)", "مصرف الإنماء", "البنك العربي الوطني", 
             "بنك البلاد", "بنك الجزيرة", "stc pay / stc bank"
         ];
 
-        // تجميع البنوك المتاحة
         let allAvailableBanks = Array.from(new Set([...banks.map(b => b.name), ...defaultBankOptions]));
 
-        salaryBankSelect.innerHTML = '<option value="" selected disabled>اختر البنك المحول إليه الراتب...</option>';
-        transferFromSelect.innerHTML = '<option value="" selected disabled>اختر البنك...</option>';
-        transferToSelect.innerHTML = '<option value="" selected disabled>اختر البنك...</option>';
+        salaryBankSelect.innerHTML = `<option value="" selected disabled>${t.phSalaryBank}</option>`;
+        transferFromSelect.innerHTML = `<option value="" selected disabled>${t.phTransferBank}</option>`;
+        transferToSelect.innerHTML = `<option value="" selected disabled>${t.phTransferBank}</option>`;
 
         allAvailableBanks.forEach(bankName => {
             let opt1 = document.createElement('option');
@@ -1251,11 +1556,12 @@
     }
 
     function renderAll() {
+        const t = translations[currentLang];
         updateSelectOptions();
 
         document.getElementById('header-month-subtitle').innerText = isViewingArchive
-            ? `أرشيف شهر: ${currentMonth}`
-            : `إدارة ومتابعة المصاريف (${currentMonth})`;
+            ? `${t.archiveBanner} ${currentMonth}`
+            : `${t.subtitle} (${currentMonth})`;
 
         let bankHtml = '';
         let totalBank = 0;
@@ -1265,19 +1571,19 @@
                 <div class="data-card-item" style="border-right-color: #2563eb;">
                     <div>
                         <div class="item-title">${b.name}</div>
-                        <div class="item-sub">حساب بنكي</div>
+                        <div class="item-sub">${t.bankAccount}</div>
                     </div>
                     <div class="d-flex align-items-center">
-                        <div class="item-amount text-primary me-2">${b.balance.toFixed(2)} ر.س</div>
+                        <div class="item-amount text-primary mx-2">${b.balance.toFixed(2)} ${t.currency}</div>
                         ${!isViewingArchive ? `
                         <div class="action-btn-group">
-                            <button class="btn-action btn-edit" onclick="editItem('bank', ${i})" title="تعديل مباشر"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn-action btn-delete" onclick="deleteItem('bank', ${i})" title="حذف"><i class="fa-solid fa-trash-can"></i></button>
+                            <button class="btn-action btn-edit" onclick="editItem('bank', ${i})" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-action btn-delete" onclick="deleteItem('bank', ${i})" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
                         </div>` : ''}
                     </div>
                 </div>`;
         });
-        document.getElementById('bank-list-mobile').innerHTML = bankHtml || '<div class="text-center text-muted fs-7 py-3">لا توجد حسابات مضافة</div>';
+        document.getElementById('bank-list-mobile').innerHTML = bankHtml || `<div class="text-center text-muted fs-7 py-3">${t.noBanks}</div>`;
 
         let ccHtml = '';
         let totalCreditUsed = 0;
@@ -1288,19 +1594,19 @@
                 <div class="data-card-item" style="border-right-color: #7c3aed;">
                     <div>
                         <div class="item-title">${c.name}</div>
-                        <div class="item-sub">الحد: ${c.limit.toFixed(2)} | المتبقي: ${remaining.toFixed(2)}</div>
+                        <div class="item-sub">${t.limit}: ${c.limit.toFixed(2)} | ${t.remaining}: ${remaining.toFixed(2)}</div>
                     </div>
                     <div class="d-flex align-items-center">
-                        <div class="item-amount text-purple me-2" style="color: #7c3aed;">${c.used.toFixed(2)} ر.س</div>
+                        <div class="item-amount text-purple mx-2" style="color: #7c3aed;">${c.used.toFixed(2)} ${t.currency}</div>
                         ${!isViewingArchive ? `
                         <div class="action-btn-group">
-                            <button class="btn-action btn-edit" onclick="editItem('credit', ${i})" title="تعديل"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn-action btn-delete" onclick="deleteItem('credit', ${i})" title="حذف"><i class="fa-solid fa-trash-can"></i></button>
+                            <button class="btn-action btn-edit" onclick="editItem('credit', ${i})" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-action btn-delete" onclick="deleteItem('credit', ${i})" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
                         </div>` : ''}
                     </div>
                 </div>`;
         });
-        document.getElementById('credit-card-list-mobile').innerHTML = ccHtml || '<div class="text-center text-muted fs-7 py-3">لا توجد بطاقات ائتمانية</div>';
+        document.getElementById('credit-card-list-mobile').innerHTML = ccHtml || `<div class="text-center text-muted fs-7 py-3">${t.noCards}</div>`;
 
         let fixedHtml = '';
         let totalFixed = 0;
@@ -1310,44 +1616,46 @@
                 <div class="data-card-item" style="border-right-color: #d97706;">
                     <div>
                         <div class="item-title">${f.title}</div>
-                        <div class="item-sub">المصدر: ${f.source || 'غير محدد'}</div>
+                        <div class="item-sub">${t.source}: ${f.source || t.unspecified}</div>
                     </div>
                     <div class="d-flex align-items-center">
-                        <div class="item-amount text-warning me-2" style="color: #d97706;">${f.amount.toFixed(2)} ر.س</div>
+                        <div class="item-amount text-warning mx-2" style="color: #d97706;">${f.amount.toFixed(2)} ${t.currency}</div>
                         ${!isViewingArchive ? `
                         <div class="action-btn-group">
-                            <button class="btn-action btn-edit" onclick="editItem('fixed', ${i})" title="تعديل"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn-action btn-delete" onclick="deleteItem('fixed', ${i})" title="حذف"><i class="fa-solid fa-trash-can"></i></button>
+                            <button class="btn-action btn-edit" onclick="editItem('fixed', ${i})" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-action btn-delete" onclick="deleteItem('fixed', ${i})" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
                         </div>` : ''}
                     </div>
                 </div>`;
         });
-        document.getElementById('fixed-list-mobile').innerHTML = fixedHtml || '<div class="text-center text-muted fs-7 py-3">لا توجد التزامات مسجلة</div>';
+        document.getElementById('fixed-list-mobile').innerHTML = fixedHtml || `<div class="text-center text-muted fs-7 py-3">${t.noFixed}</div>`;
 
         let debtHtml = '';
         let totalCredit = 0;
         let totalDebit = 0;
         debts.forEach((d, i) => {
-            if(d.type === 'مدين') totalCredit += d.amount;
+            let isCreditor = d.type === 'مدين' || d.type === t.optCreditor;
+            if(isCreditor) totalCredit += d.amount;
             else totalDebit += d.amount;
-            let color = d.type === 'مدين' ? '#059669' : '#dc2626';
+            let color = isCreditor ? '#059669' : '#dc2626';
+            let label = isCreditor ? (currentLang === 'ar' ? 'مدين' : 'Creditor') : (currentLang === 'ar' ? 'دائن' : 'Debtor');
             debtHtml += `
                 <div class="data-card-item" style="border-right-color: ${color};">
                     <div>
                         <div class="item-title">${d.person}</div>
-                        <div class="item-sub"><span class="badge ${d.type === 'مدين' ? 'bg-success' : 'bg-danger'}">${d.type}</span></div>
+                        <div class="item-sub"><span class="badge ${isCreditor ? 'bg-success' : 'bg-danger'}">${label}</span></div>
                     </div>
                     <div class="d-flex align-items-center">
-                        <div class="item-amount me-2" style="color: ${color};">${d.amount.toFixed(2)} ر.س</div>
+                        <div class="item-amount mx-2" style="color: ${color};">${d.amount.toFixed(2)} ${t.currency}</div>
                         ${!isViewingArchive ? `
                         <div class="action-btn-group">
-                            <button class="btn-action btn-edit" onclick="editItem('debt', ${i})" title="تعديل"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn-action btn-delete" onclick="deleteItem('debt', ${i})" title="حذف"><i class="fa-solid fa-trash-can"></i></button>
+                            <button class="btn-action btn-edit" onclick="editItem('debt', ${i})" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-action btn-delete" onclick="deleteItem('debt', ${i})" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
                         </div>` : ''}
                     </div>
                 </div>`;
         });
-        document.getElementById('debt-list-mobile').innerHTML = debtHtml || '<div class="text-center text-muted fs-7 py-3">لا يوجد ديون مسجلة</div>';
+        document.getElementById('debt-list-mobile').innerHTML = debtHtml || `<div class="text-center text-muted fs-7 py-3">${t.noDebts}</div>`;
 
         let dailyHtml = '';
         let totalDaily = 0;
@@ -1357,75 +1665,77 @@
                 <div class="data-card-item" style="border-right-color: #dc2626;">
                     <div>
                         <div class="item-title">${dl.item}</div>
-                        <div class="item-sub">${dl.date} • ${dl.source || 'كاش'}</div>
+                        <div class="item-sub">${dl.date} • ${dl.source || t.cash}</div>
                     </div>
                     <div class="d-flex align-items-center">
-                        <div class="item-amount text-danger me-2">${dl.amount.toFixed(2)} ر.س</div>
+                        <div class="item-amount text-danger mx-2">${dl.amount.toFixed(2)} ${t.currency}</div>
                         ${!isViewingArchive ? `
                         <div class="action-btn-group">
-                            <button class="btn-action btn-edit" onclick="editItem('daily', ${i})" title="تعديل"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn-action btn-delete" onclick="deleteItem('daily', ${i})" title="حذف"><i class="fa-solid fa-trash-can"></i></button>
+                            <button class="btn-action btn-edit" onclick="editItem('daily', ${i})" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-action btn-delete" onclick="deleteItem('daily', ${i})" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
                         </div>` : ''}
                     </div>
                 </div>`;
         });
-        document.getElementById('daily-list-mobile').innerHTML = dailyHtml || '<div class="text-center text-muted fs-7 py-3">لم تعبر أي مصاريف اليوم</div>';
-        document.getElementById('daily-count-badge').innerText = `${dailyExpenses.length} مصروف`;
+        document.getElementById('daily-list-mobile').innerHTML = dailyHtml || `<div class="text-center text-muted fs-7 py-3">${t.noDaily}</div>`;
+        document.getElementById('daily-count-badge').innerText = `${dailyExpenses.length} ${t.itemCount}`;
 
-        document.getElementById('total-bank-balance').innerText = totalBank.toFixed(2) + ' ر.س';
-        document.getElementById('total-credit-used').innerText = totalCreditUsed.toFixed(2) + ' ر.س';
-        document.getElementById('total-fixed-expenses').innerText = totalFixed.toFixed(2) + ' ر.س';
+        document.getElementById('total-bank-balance').innerText = `${totalBank.toFixed(2)} ${t.currency}`;
+        document.getElementById('total-credit-used').innerText = `${totalCreditUsed.toFixed(2)} ${t.currency}`;
+        document.getElementById('total-fixed-expenses').innerText = `${totalFixed.toFixed(2)} ${t.currency}`;
         
         let net = totalBank - (totalFixed + totalDebit + totalCreditUsed);
-        document.getElementById('net-balance').innerText = net.toFixed(2) + ' ر.س';
+        document.getElementById('net-balance').innerText = `${net.toFixed(2)} ${t.currency}`;
     }
 
     function calculateReport() {
+        const t = translations[currentLang];
         let totalBank = banks.reduce((a, b) => a + b.balance, 0);
         let totalCreditUsed = creditCards.reduce((a, b) => a + b.used, 0);
         let totalFixed = fixedExpenses.reduce((a, b) => a + b.amount, 0);
         let totalDaily = dailyExpenses.reduce((a, b) => a + b.amount, 0);
-        let totalCredit = debts.filter(d => d.type === 'مدين').reduce((a, b) => a + b.amount, 0);
-        let totalDebit = debts.filter(d => d.type === 'دائن').reduce((a, b) => a + b.amount, 0);
+        let totalCredit = debts.filter(d => d.type === 'مدين' || d.type === t.optCreditor).reduce((a, b) => a + b.amount, 0);
+        let totalDebit = debts.filter(d => d.type === 'دائن' || d.type === t.optDebtor).reduce((a, b) => a + b.amount, 0);
 
         let totalAssets = totalBank + totalCredit;
         let totalLiabilities = totalFixed + totalDebit + totalCreditUsed;
         let grandTotalSpent = totalFixed + totalDaily;
 
-        document.getElementById('rep-assets').innerText = totalAssets.toFixed(2) + ' ر.س';
-        document.getElementById('rep-liabilities').innerText = totalLiabilities.toFixed(2) + ' ر.س';
-        document.getElementById('rep-daily').innerText = totalDaily.toFixed(2) + ' ر.س';
-        document.getElementById('rep-total-spent').innerText = grandTotalSpent.toFixed(2) + ' ر.س';
+        document.getElementById('rep-assets').innerText = `${totalAssets.toFixed(2)} ${t.currency}`;
+        document.getElementById('rep-liabilities').innerText = `${totalLiabilities.toFixed(2)} ${t.currency}`;
+        document.getElementById('rep-daily').innerText = `${totalDaily.toFixed(2)} ${t.currency}`;
+        document.getElementById('rep-total-spent').innerText = `${grandTotalSpent.toFixed(2)} ${t.currency}`;
 
         let badge = document.getElementById('eval-badge');
         let text = document.getElementById('eval-text');
 
         if (totalBank === 0 && grandTotalSpent === 0 && totalLiabilities === 0) {
             badge.className = 'badge-status bg-secondary text-white';
-            badge.innerText = 'لا توجد بيانات كافية';
-            text.innerText = 'يرجى إدخال أرصدتك ومصروفاتك للبدء في التقييم.';
+            badge.innerText = t.evalNoData;
+            text.innerText = t.evalNoDataDesc;
             return;
         }
 
         let totalInitialCapital = totalAssets + grandTotalSpent;
         let ratio = totalInitialCapital > 0 ? (grandTotalSpent / totalInitialCapital) * 100 : 0;
+        let formattedRatio = ratio.toFixed(1);
 
         if (totalBank < 0 || grandTotalSpent > totalAssets) {
             badge.className = 'badge-status bg-danger text-white';
-            badge.innerText = 'مخاطر عالية (حرِج)';
-            text.innerText = 'مصاريفك والتزاماتك تتجاوز إجمالي أرصدتك المتاحة! ينصح بالحد من المصروفات اليومية.';
+            badge.innerText = t.evalRisk;
+            text.innerText = t.evalRiskDesc;
         } else if (ratio > 70) {
             badge.className = 'badge-status bg-warning text-dark';
-            badge.innerText = 'استهلاك مرتفع';
-            text.innerText = `تستهلك ${ratio.toFixed(1)}% من مجموع السيولة. حاول ضبط النفقات لزيادة الادخار.`;
+            badge.innerText = t.evalHigh;
+            text.innerText = t.evalHighDesc.replace('{ratio}', formattedRatio);
         } else if (ratio > 40) {
             badge.className = 'badge-status bg-info text-white';
-            badge.innerText = 'إدارة متوازنة';
-            text.innerText = `مصاريفك ضمن النطاق المقبول (${ratio.toFixed(1)}%). وضعك المالي ممتاز ومتوازن.`;
+            badge.innerText = t.evalBalanced;
+            text.innerText = t.evalBalancedDesc.replace('{ratio}', formattedRatio);
         } else {
             badge.className = 'badge-status bg-success text-white';
-            badge.innerText = 'إدارة ممتازة جداً';
-            text.innerText = `أداء ممتاز! استهلاكك منخفض (${ratio.toFixed(1)}%). واصل التخطيط والادخار الناجح.`;
+            badge.innerText = t.evalExcellent;
+            text.innerText = t.evalExcellentDesc.replace('{ratio}', formattedRatio);
         }
     }
 </script>
