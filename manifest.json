@@ -1,0 +1,21 @@
+{
+  "short_name": "محفظتي",
+  "name": "إدارة المالية الشخصية",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2845/2845899.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2845/2845899.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#1e293b",
+  "theme_color": "#1e293b",
+  "display": "standalone",
+  "orientation": "portrait"
+}
